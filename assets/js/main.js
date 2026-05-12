@@ -1,196 +1,119 @@
-(function() {
-  "use strict";
-
-  /**
-   * Apply .scrolled class to the body as the page is scrolled down
+/**
+   * Final Chat Logic: Firebase Firestore (v8)
    */
-  function toggleScrolled() {
-    const selectBody = document.querySelector('body');
-    const selectHeader = document.querySelector('#header');
-    if (!selectHeader.classList.contains('scroll-up-sticky') && !selectHeader.classList.contains('sticky-top') && !selectHeader.classList.contains('fixed-top')) return;
-    window.scrollY > 100 ? selectBody.classList.add('scrolled') : selectBody.classList.remove('scrolled');
+
+  // Konfigurasi dari dashboard Firebase kamu
+  const firebaseConfig = {
+    apiKey: "AIzaSyDxgDezO_EJzM0l6xmGyIfbV-HCOQywq7s",
+    authDomain: "music-chat-app-3d525.firebaseapp.com",
+    projectId: "music-chat-app-3d525",
+    storageBucket: "music-chat-app-3d525.firebasestorage.app",
+    messagingSenderId: "157371617723",
+    appId: "1:157371617723:web:7088131b3f93e3b04cf49e",
+    measurementId: "G-R56P683HK4"
+  };
+
+  // Inisialisasi Firebase
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.firestore();
+
+  const chatForm = document.getElementById('chatForm');
+  const chatInput = document.getElementById('chatInput');
+  const chatDisplay = document.getElementById('chatDisplay');
+
+  // 1. IDENTITAS ANONIM (Nama Hewan)
+  const daftarHewan = ['Kucing', 'Panda', 'Harimau', 'Elang', 'Kelinci', 'Paus', 'Beruang', 'Rubah', 'Singa', 'Penguin'];
+  let myIdentity = JSON.parse(localStorage.getItem('myChatIdentity'));
+
+  if (!myIdentity) {
+    const hewanAcak = daftarHewan[Math.floor(Math.random() * daftarHewan.length)];
+    const angkaAcak = Math.floor(Math.random() * 1000);
+    myIdentity = { name: hewanAcak + angkaAcak };
+    localStorage.setItem('myChatIdentity', JSON.stringify(myIdentity));
   }
 
-  document.addEventListener('scroll', toggleScrolled);
-  window.addEventListener('load', toggleScrolled);
+  // 2. FUNGSI RENDER BUBBLE
+  function renderChat(name, text, time) {
+    const chatBlock = document.createElement('div');
+    chatBlock.classList.add('mb-1', 'd-flex', 'flex-column', 'align-items-start');
 
-  /**
-   * Mobile nav toggle
-   */
-  const mobileNavToggleBtn = document.querySelector('.mobile-nav-toggle');
+    const bubble = document.createElement('div');
+    bubble.style.backgroundColor = '#ffffff'; 
+    bubble.style.color = '#333';
+    bubble.style.padding = '10px 18px';
+    bubble.style.borderRadius = '20px';
+    bubble.style.fontSize = '14px';
+    bubble.style.maxWidth = '85%';
+    bubble.style.wordBreak = 'break-word';
+    bubble.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+    
+    const nameEl = document.createElement('div');
+    nameEl.style.fontWeight = '800';
+    nameEl.style.fontSize = '12px';
+    nameEl.style.marginBottom = '2px';
+    nameEl.textContent = name;
 
-  function mobileNavToogle() {
-    document.querySelector('body').classList.toggle('mobile-nav-active');
-    mobileNavToggleBtn.classList.toggle('bi-list');
-    mobileNavToggleBtn.classList.toggle('bi-x');
-  }
-  if (mobileNavToggleBtn) {
-    mobileNavToggleBtn.addEventListener('click', mobileNavToogle);
-  }
+    const bodyEl = document.createElement('div');
+    bodyEl.textContent = text;
 
-  /**
-   * Hide mobile nav on same-page/hash links
-   */
-  document.querySelectorAll('#navmenu a').forEach(navmenu => {
-    navmenu.addEventListener('click', () => {
-      if (document.querySelector('.mobile-nav-active')) {
-        mobileNavToogle();
-      }
-    });
+    bubble.appendChild(nameEl);
+    bubble.appendChild(bodyEl);
 
-  });
+    const timeEl = document.createElement('small');
+    timeEl.style.fontSize = '10px';
+    timeEl.style.color = 'rgba(255,255,255,0.6)';
+    timeEl.style.marginTop = '4px';
+    timeEl.style.marginLeft = '12px';
+    timeEl.textContent = time;
 
-  /**
-   * Toggle mobile nav dropdowns
-   */
-  document.querySelectorAll('.navmenu .toggle-dropdown').forEach(navmenu => {
-    navmenu.addEventListener('click', function(e) {
-      e.preventDefault();
-      this.parentNode.classList.toggle('active');
-      this.parentNode.nextElementSibling.classList.toggle('dropdown-active');
-      e.stopImmediatePropagation();
-    });
-  });
-
-  /**
-   * Preloader
-   */
-  const preloader = document.querySelector('#preloader');
-  if (preloader) {
-    window.addEventListener('load', () => {
-      preloader.remove();
-    });
+    chatBlock.appendChild(bubble);
+    chatBlock.appendChild(timeEl);
+    chatDisplay.appendChild(chatBlock);
+    
+    // Auto scroll ke bawah
+    chatDisplay.scrollTop = chatDisplay.scrollHeight;
   }
 
-  /**
-   * Scroll top button
-   */
-  let scrollTop = document.querySelector('.scroll-top');
-
-  function toggleScrollTop() {
-    if (scrollTop) {
-      window.scrollY > 100 ? scrollTop.classList.add('active') : scrollTop.classList.remove('active');
-    }
-  }
-  scrollTop.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  });
-
-  window.addEventListener('load', toggleScrollTop);
-  document.addEventListener('scroll', toggleScrollTop);
-
-  /**
-   * Animation on scroll function and init
-   */
-  function aosInit() {
-    AOS.init({
-      duration: 600,
-      easing: 'ease-in-out',
-      once: true,
-      mirror: false
-    });
-  }
-  window.addEventListener('load', aosInit);
-
-  /**
-   * Init typed.js
-   */
-  const selectTyped = document.querySelector('.typed');
-  if (selectTyped) {
-    let typed_strings = selectTyped.getAttribute('data-typed-items');
-    typed_strings = typed_strings.split(',');
-    new Typed('.typed', {
-      strings: typed_strings,
-      loop: true,
-      typeSpeed: 50,
-      backSpeed: 50,
-      backDelay: 100
-    });
-  }
-
-  /**
-   * Initiate Pure Counter
-   */
-  new PureCounter();
-
-  /**
-   * Animate the skills items on reveal
-   */
-  let skillsAnimation = document.querySelectorAll('.skills-animation');
-  skillsAnimation.forEach((item) => {
-    new Waypoint({
-      element: item,
-      offset: '80%',
-      handler: function(direction) {
-        let progress = item.querySelectorAll('.progress .progress-bar');
-        progress.forEach(el => {
-          el.style.width = el.getAttribute('aria-valuenow') + '%';
+  // 3. AMBIL DATA REAL-TIME DARI FIRESTORE
+  if (chatDisplay) {
+    db.collection("comments").orderBy("timestamp", "asc")
+      .onSnapshot((querySnapshot) => {
+        chatDisplay.innerHTML = ''; 
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          renderChat(data.name, data.text, data.timeString);
         });
-      }
-    });
-  });
-
-  /**
-   * Init swiper sliders
-   */
-  function initSwiper() {
-    document.querySelectorAll(".init-swiper").forEach(function(swiperElement) {
-      let config = JSON.parse(
-        swiperElement.querySelector(".swiper-config").innerHTML.trim()
-      );
-
-      if (swiperElement.classList.contains("swiper-tab")) {
-        initSwiperWithCustomPagination(swiperElement, config);
-      } else {
-        new Swiper(swiperElement, config);
-      }
-    });
-  }
-
-  window.addEventListener("load", initSwiper);
-
-  /**
-   * Initiate glightbox
-   */
-  const glightbox = GLightbox({
-    selector: '.glightbox'
-  });
-
-  /**
-   * Init isotope layout and filters
-   */
-  document.querySelectorAll('.isotope-layout').forEach(function(isotopeItem) {
-    let layout = isotopeItem.getAttribute('data-layout') ?? 'masonry';
-    let filter = isotopeItem.getAttribute('data-default-filter') ?? '*';
-    let sort = isotopeItem.getAttribute('data-sort') ?? 'original-order';
-
-    let initIsotope;
-    imagesLoaded(isotopeItem.querySelector('.isotope-container'), function() {
-      initIsotope = new Isotope(isotopeItem.querySelector('.isotope-container'), {
-        itemSelector: '.isotope-item',
-        layoutMode: layout,
-        filter: filter,
-        sortBy: sort
       });
-    });
+  }
 
-    isotopeItem.querySelectorAll('.isotope-filters li').forEach(function(filters) {
-      filters.addEventListener('click', function() {
-        isotopeItem.querySelector('.isotope-filters .filter-active').classList.remove('filter-active');
-        this.classList.add('filter-active');
-        initIsotope.arrange({
-          filter: this.getAttribute('data-filter')
+  // 4. KIRIM PESAN KE FIRESTORE
+  if (chatForm) {
+    const inputModalEl = document.getElementById('inputModal');
+    let inputModal = (inputModalEl) ? new bootstrap.Modal(inputModalEl) : null;
+
+    chatForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const t = chatInput.value.trim();
+      
+      if(t) {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+
+        db.collection("comments").add({
+          name: myIdentity.name,
+          text: t,
+          timeString: timeStr,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => {
+          chatInput.value = ''; 
+          if (inputModal) inputModal.hide();
+        })
+        .catch((error) => {
+          console.error("Error sending message: ", error);
         });
-        if (typeof aosInit === 'function') {
-          aosInit();
-        }
-      }, false);
+      }
     });
-
-  });
-
-})();
+  }
